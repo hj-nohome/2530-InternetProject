@@ -1,0 +1,82 @@
+:root{
+  --bg-color: #FFFFFF;      /* used for background. should be white or dark grey */
+  --fg-color: #D9D9D9;      /* used for sidebar or container backgrounds, should be light gray */
+  --prim-color: #E2A9F1;    /* ptimary purple, shouldnt change. */
+  --sec-color: #FFDE59;     /* secondary yellow, used for buttons and clickable text, shouldnt change */
+  --text-color: #000000;    /* used for default text, which should always be on top of foreground, never background directly */
+}
+
+@font-face{
+  font-family: 'default';
+  src: url('./media/fonts/Roboto-Regular.woff2');
+  font-display: swap;
+}
+
+*{
+  padding: 0;
+  margin: 0;
+  font-family: 'default';
+  font-size: 24px;
+  color: var(--text-color);
+  text-decoration: none;
+  overflow: hidden;
+}
+
+body{
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  grid-template-rows: 50px 1fr;
+  background-color: var(--bg-color);
+  height: 100vh;
+}
+
+#sidebar{
+  grid-column: 1;
+  grid-row: 2;
+  height: 100%;
+  width: 200px;
+  background-color: var(--fg-color);
+  position: fixed;
+}
+
+#sidebar a{
+  display: block;
+  width: 100%;
+  padding: 10px 0 20px 0;
+  text-align: center;
+}
+
+#topbar{
+  grid-column: 1 / -1;
+  grid-row: 1;
+  height: 50px;
+  width: 100%;
+  background-color: var(--prim-color);
+  display: grid;
+  grid-template-columns: auto auto;
+  position: fixed;
+}
+
+#topbar-logo{
+  height: 50px;
+  padding: 0 0 0 4px;
+}
+
+#topbar-nav{
+  margin-left: auto;
+  padding-right: 10px;
+}
+
+#topbar-nav a img{
+  height: 50px;
+  padding: 0 4px 0 4px;
+  background-color: var(--sec-color);
+  margin-right: 30px;
+  border-radius: 5px
+}
+
+#main-content{
+  grid-column: 2;
+  grid-row: 2;
+  padding: 2px 0 0 20px;
+}
