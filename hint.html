@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>hint by esncu</title>
+    <style>
+      *{
+        margin: 0;
+        padding: 0;
+      }
+      #mainDiv{
+        background-color: darkgrey;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100vw;
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+        touch-action: manipulation;
+      }
+      #gameSpace{
+        background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAyBAMAAAC5cHbcAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAPUExURQCu/////6WlpQB3DQCtC1bnseYAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABuSURBVDjLxZDBDYAwDAPdToCZoGSFZoNk/5ngR1LEp4A4+eOqiqXDfxQydR7EvpESexW5uUQuw+H0UMm1xQ8iDbPkKebtcvQ4VYk8JfiI92QODG6R3RZkt/WR2xm6ewy89xh005hrV4uBm54x3QG+RhpLA/aNrAAAAABJRU5ErkJggg==);
+        background-size: 100%;
+        image-rendering: pixelated;
+        height: 90vh;
+        aspect-ratio: 3/5;
+        display: none;
+        position: relative;
+        overflow: hidden;
+      }
+      #bird{
+        background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAoSURBVBhXY/z/i+E/AxQwsjEwMvwHAiD7P0wCoWI+mEQSAAJGNgZGAMLOEY5K8TYSAAAAAElFTkSuQmCC);
+        background-size: 100%;
+        image-rendering: pixelated;
+        position: absolute;
+      }
+      #menu{
+        display: flex;
+        height: 90vh;
+        aspect-ratio: 3/5;
+        background-color: grey;
+        align-items: center;
+        justify-content: center;
+      }
+      #menu h2{
+        background-color: green;
+        padding: 10px;
+      }
+      .pipe{
+        background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAANCAIAAAAboLhvAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAiSURBVChTY2QAgrXcIPIUE4gEArN/DMFfYRwMMCqBBhgYAOIeBBpSxnJ2AAAAAElFTkSuQmCC);
+        position: absolute;
+        background-size: 100%;
+        image-rendering: pixelated;
+        width: 26%;
+        height: 100%;
+        background-repeat: repeat-y;
+      }
+      .pipeTop{
+        background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAFCAIAAADzBuo/AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAlSURBVBhXY8APGEHEWm4wGwxOMUEZZv8Ygr/CODgAAWm8gIEBAJrIBAawXTjOAAAAAElFTkSuQmCC);
+        position: absolute;
+        background-size: 100%;
+        image-rendering: pixelated;
+        width: 33%;
+        height: 10%;
+      }
+      #score{
+        font-size: 28px;
+        font-family: monospace;
+        font-weight: bold;
+        width: 100%;
+        background-color: lightblue;
+        overflow: hidden;
+      }
+      #highscore{
+        font-size: 28px;
+        font-family: monospace;
+        font-weight: bold;
+        width: 100%;
+        background-color: yellow;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <div id='mainDiv' onpointerdown='flap()'>
+      <div id='gameSpace'>
+        <div id="bird"></div>
+      </div>
+      <div id='menu' onclick='start()'>
+        <h2>Get 10 score for a hint. Press space or tap me to start!</h2>
+      </div>
+      <p id='score'>Score: </p>
+      <p id='highscore'>Best : </p>
+    </div>
+  </body>
+  <script>
+    const divHeight = window.innerHeight * 0.9, divWidth = divHeight*0.6;
+    const birdSize = divHeight*0.08, pipeSpawnTime = 3, pipeWidth = divHeight*0.16;
+    const pipeHeight = divHeight, pipeTopWidth = divHeight/5, pipeTopHeight = divHeight/10;
+    var game = false, ng = false;
+    const gameSpace = document.getElementById('gameSpace');
+    const menu = document.getElementById('menu');
+    const bird = document.getElementById('bird');
+    const hs = document.getElementById('highscore');
+    bird.style.width = birdSize + 'px';
+    bird.style.height = birdSize + 'px';
+    gameSpace.style.height = divHeight;
+    gameSpace.style.width = divWidth;
+
+    var highscore = localStorage.getItem('highscore') ?? 0;
+    hs.textContent = 'Best : '+parseInt(highscore);
+    
+    var yPos = divHeight/10, rotation = 0, yVel = 0, rotationVel = 0, pipes, score = 0;
+    let lastTime = 0, deltaTime, pos = 0, pipeTimer = 0;
+    function render(currentTime) {
+      if(ng){
+        ng = false;
+        lastTime = currentTime;
+      }
+      deltaTime = (currentTime - lastTime) / 1000;
+      lastTime = currentTime;
+      function scrollbg(){
+        if(pos > -divWidth)
+          pos -= (divHeight/6 * deltaTime);
+        else
+          pos = 0;
+        gameSpace.style.backgroundPosition = pos+'px';
+      }
+      function physics(){
+        //apply decay/gravity
+        if(yVel < divHeight*1.6)
+          yVel += divHeight*1.6 * deltaTime;
+        if(rotationVel < divHeight*0.4)
+          rotationVel += divHeight*0.4 * deltaTime;
+
+        //apply position
+        yPos += yVel * deltaTime;
+        rotation += rotationVel * deltaTime;
+        if(rotation > 45)
+          rotation = 45;
+        bird.style.top = yPos + "px";
+        bird.style.rotate = rotation + "deg";
+
+        //collision check for floor and ceiling
+        if(yPos + birdSize > divHeight || yPos < 0)
+          game = false;
+      }
+      function pipeUpdate(){
+        pipeTimer += deltaTime;
+        if(pipeTimer >= pipeSpawnTime){
+          //create pipe
+          const pipe_spacing = Math.random() * (divHeight*0.3 - divHeight/5) + divHeight/5;
+          const position_y = Math.random() * ((divHeight*0.86) - pipe_spacing) + pipe_spacing;
+          for(let i = 0; i<=3; ++i){
+            let pipediv=document.createElement('div'), posx = divWidth, posy;
+            switch(i){
+              case 0:
+                posy = position_y;
+                pipediv.style.height = pipeHeight;
+                pipediv.style.width = pipeWidth;
+                pipediv.className = "pipe";
+                break;
+              case 1:
+                posx -= divHeight/50;
+                posy = position_y;
+                pipediv.style.height = pipeTopHeight;
+                pipediv.style.width = pipeTopWidth;
+                pipediv.className = "pipeTop";
+                pipediv.id='bot';
+                break;
+              case 2:
+                posy = position_y - pipe_spacing - pipeHeight;
+                pipediv.style.height = pipeHeight;
+                pipediv.style.width = pipeWidth;
+                pipediv.className = "pipe";
+                break;
+              case 3:
+                posx -= divHeight/50;
+                posy = position_y - pipe_spacing - pipeTopHeight;
+                pipediv.style.height = pipeTopHeight;
+                pipediv.style.width = pipeTopWidth;
+                pipediv.className = "pipeTop";
+                break;
+            }
+            pipediv.style.left = posx + 'px';
+            pipediv.style.top = posy + 'px';
+            gameSpace.appendChild(pipediv);
+          }
+          pipeTimer -= pipeSpawnTime;
+        }
+        
+        //scroll pipes
+        pipes = document.querySelectorAll('.pipe, .pipeTop');
+
+        for(const pipe of pipes){
+          let x = parseFloat(pipe.style.left);
+          x-= divHeight/5*deltaTime;
+
+          if(x<-pipeTopWidth){
+            pipe.remove();
+            score+=0.25;
+            document.getElementById('score').textContent = 'Score: ' + score.toFixed(0);
+            if(score > highscore){
+              highscore = score;
+              localStorage.setItem('highscore', score);
+              hs.textContent = 'Best : '+parseInt(highscore);
+            }
+          }else
+            pipe.style.left=x+'px';
+
+          //collision check with bird
+          if(pipe.className == 'pipeTop' && (x<=(divHeight/10)+birdSize && x+pipeTopWidth >= (divHeight/10))){
+            if(pipe.id == 'bot'){
+              if(yPos + birdSize > parseFloat(pipe.style.top))
+                game = false;
+            }else{
+              if(yPos < parseFloat(pipe.style.top) + pipeTopHeight)
+                game = false;
+            }
+          }
+        }
+      }
+
+      scrollbg();
+      pipeUpdate();
+      physics();
+      if(game)
+        requestAnimationFrame(render);
+      else
+        end();
+    }
+    
+    function flap(){
+      yVel = -divHeight*0.6;
+      rotationVel = 0;
+      rotation = -45;
+    }
+    document.addEventListener('keydown', function(event) {
+      if (event.key === ' ') {
+        if(game)
+          flap();
+        else
+          start();
+        event.preventDefault();
+      }
+    });
+    
+    function start(){
+      menu.style.display = 'none';
+      gameSpace.style.display = 'inline';
+      bird.style.left = divHeight/10 + 'px', yPos = divHeight/10, rotation = 0, yVel = 0, rotationVel = 0, lastTime = 0, pos = 0, pipeTimer = pipeSpawnTime, pipes = null;
+      game = true;
+      ng = true;
+      document.getElementById('score').textContent = 'Score: ' + score.toFixed(0);
+      requestAnimationFrame(render);
+    }
+
+    function end(){
+      menu.style.display = 'flex';
+      gameSpace.style.display = 'none';
+      pipes = document.querySelectorAll('.pipe, .pipeTop');
+
+      for(const pipe of pipes){
+        pipe.remove();
+      }
+
+      if(score >= 10){
+        finish();
+      }
+      score = 0;
+    }
+
+    function finish(){
+      document.body.innerHTML = 'Enter any password or name. Put \'admin\' as name to login as admin.';
+    }
+  </script>
+</html>

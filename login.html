@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="styles.css">
+    <title>Impian - Log In</title>
+    <style>
+      /* reset styles.css */
+      #main-content{
+        display: relative;
+        text-align: center;
+        padding: 150px 0 0 0;
+      }
+      body{
+        display: inline;
+        background-color: var(--bg-color);
+        height: 100vh;
+      }
+      /* reset styles.css */
+
+
+      form{
+        width: 60%;
+        margin: 40px auto 0 auto;
+        padding: 20px;
+        background-color: var(--fg-color);
+        display: grid;
+        grid-template-columns: auto 50px;
+        border-radius: 5px;
+      }
+
+      input[type='text'][name='name']{
+        grid-row: 1;
+        grid-column: 1;
+        width: 100%;
+        height: 50px;
+      }
+      
+      input[type='password'][name='password'], input[type='text'][name='password']{
+        grid-row: 2;
+        grid-column: 1;
+        width: 100%;
+        height: 50px;
+      }
+
+      form img{
+        grid-row: 2;
+        grid-column: 2;
+        width: 100%;
+        height: 50px;
+        margin-left: 10px;
+        cursor: pointer;
+      }
+
+      input[type='button']{
+        grid-column: 1/3;
+        height: 60px;
+        background-color: var(--sec-color);
+        border: none;
+        border-radius: 15px;
+        margin: 5px 0 3px 0;
+      }
+      
+      form a{
+        font-size: 16px;
+      }
+    </style>
+  </head>
+
+
+  <body>
+    <header id='infobar'>
+      <a href="index.html"><img src="./media/logo.webp" id='topbar-logo'></a>
+    </header>
+
+    <div id='main-content'>
+      <form>
+        <input type="text" name="name" placeholder="Enter username"><br>
+        <input type="password" name="password" placeholder="Enter password"><img src='./media/view.png' data-state='hidden' onclick="togglePass()">
+        <div style='text-align: right; padding-right: 8px;'><a href="hint.html">Forgot Password?</a></div><br>
+        <input type="button" class="submitBtn" value="Login" onclick="login()"><br>
+        <input type="button" class="submitBtn" value="Register" onclick="login()">
+      </form>
+    </div>
+  </body>
+  <script>
+    const pwdElm = document.querySelectorAll('[name="password"]')[0];
+    const hideBtn = document.querySelectorAll('form img')[0];
+    function togglePass(){
+      if(hideBtn.dataset.state == "hidden"){
+        hideBtn.src = './media/hide.png';
+        pwdElm.type = 'text';
+        hideBtn.dataset.state = "visible";
+      }else{
+        hideBtn.src = './media/view.png';
+        pwdElm.type = 'password';
+        hideBtn.dataset.state = "hidden";
+      }
+    }
+    function login(){
+      let name = document.querySelectorAll('[name="name"]')[0].value.toLowerCase();
+      if (name == "admin")
+        localStorage.setItem('user','2');
+      else
+        localStorage.setItem('user','1');
+      window.location.href = 'index.html';
+    }
+  </script>
+</html>
