@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="styles.css">
+    <script src='session.js'></script>
+    <script src="data.js"></script>
+
+    <title>PLACEHOLDER</title>
+    <style>
+      
+    </style>
+  </head>
+
+
+  <body>
+    <aside id='sidebar'>
+      <a href="index.html">Home</a>
+      <a href="panel.html">Profile</a>
+      <a href="cart.html">Cart</a>
+      <a href="about.html">About&nbsp;Us</a>
+      <a href="contact.html">Contact&nbsp;Us</a>
+    </aside>
+
+    <header id='topbar'>
+      <a href="index.html"><img src="./media/logo.webp" id='topbar-logo'></a>
+      <div id='topbar-nav'>
+        <a href="cart.html"><img src="./media/cart.png"></a>
+        <a href="panel.html"><img src="./media/user.png"></a>
+      </div>
+    </header>
+
+    <div id='main-content'>
+      <input type="text" placeholder='store name' id="nameInput">
+      <input type="button" onclick="add()" value="Add Store">
+      <input type="button" onclick="delet()" value="Delete Store">
+      <input type="button" onclick="save()" value="Save Data">
+      <p id='display'>display</p>
+    </div>
+  </body>
+  <script>
+    function refresh(){
+      let storec = 0, productc = 0;
+      for(let i = 0; i < stores.length; ++i){
+        storec++;
+        productc += stores[i].Products.length;
+      }
+      document.getElementById('display').innerHTML = 'StoreC: ' + storec + '<br>ProductC: ' + productc;
+    }
+    function add(){
+      stores.push(new Store(document.getElementById('nameInput').value, 'igm'));
+      for(let i = 0; i < stores.length; ++i){
+        stores[i].Products.push(new Product('stuff','img',67));
+      }
+      refresh();
+    }
+    function delet(){
+      stores.pop();
+      for(let i = 0; i < stores.length; ++i){
+        stores[i].Products.pop();
+      }
+      refresh();
+    }
+    function save(){
+      saveStores(stores);
+    }
+    document.addEventListener("DOMContentLoaded", () => {
+      window.onDataReady = () => {
+        refresh();
+      }
+    });
+  </script>
+</html>
