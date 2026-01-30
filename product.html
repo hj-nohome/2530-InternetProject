@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="styles.css">
+    <script src='session.js'></script>
+    <script src='data.js'></script>
+    <title>Impian - Product Page</title>
+    <style>
+      form{
+        width: 60%;
+        margin: 40px auto 0 auto;
+        padding: 20px;
+        background-color: var(--fg-color);
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        border-radius: 5px;
+      }
+
+      img {
+        border: 2px solid black;
+        border-radius: 10px;
+      }
+
+      button {
+        background-color: var(--sec-color);
+        border-radius: 20px;
+        padding: 10px;
+        border: 1px solid var(--sec-color);
+      }
+
+      div #rating {
+        color:var(--sec-color);
+        font-size:2em;
+      }
+
+      #product-price {
+        margin-bottom: 0;
+      }
+
+      .price-quantity-row {
+        display: block;
+        padding: 20px;
+      }
+
+      #quantity {
+        width:20%;
+
+      }
+
+      .rating-number {
+        color:black;
+        font-weight: bold;
+        padding-left: 40px;
+      }
+      
+      .shop-actions {
+        background-color: var(--fg-color);
+        width: 60%;
+        padding: 20px;
+        border-radius: 5px;
+        margin: 40px auto 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+    </style>
+  </head>
+
+
+  <body>
+    <aside id='sidebar'>
+      <a href="index.html">Home</a>
+      <a href="panel.html">Profile</a>
+      <a href="cart.html">Cart</a>
+      <a href="about.html">About&nbsp;Us</a>
+      <a href="contact.html">Contact&nbsp;Us</a>
+    </aside>
+
+    <header id='topbar'>
+      <a href="index.html"><img src="./media/logo.webp" id='topbar-logo'></a>
+      <div id='topbar-nav'>
+        <a href="cart.html"><img src="./media/cart.png"></a>
+        <a href="panel.html"><img src="./media/user.png"></a>
+      </div>
+    </header>
+
+    <div id='main-content'>
+      <form id="product-detail">
+        <h2>Product Name</h2>
+        <div id="rating"></div>
+        <img src="" id="product-img" alt="placeholder" width="200px" height="200px">
+        
+        <div class="price-quantity-row">
+          <p id="product-price">RM0.00</p>
+          <label for="quantity">Quantity:</label>
+          <input type="number" id="quantity" name="quantity" value="1" min="1">
+        </div>
+        <div style="grid-column: 2;">
+          <button onclick="buyProduct()">Buy Now</button>
+          <button onclick="addToCart()">Add To Cart</button>
+        </div>
+
+        <label for="user-rating" style="margin-top: 20px;">Rate this product:</label>
+        <select id="user-rating" style="margin-top: 20px;">
+          <option value="1">1 ★</option>
+          <option value="2">2 ★★</option>
+          <option value="3">3 ★★★</option>
+          <option value="4">4 ★★★★</option>
+          <option value="5">5 ★★★★★</option>
+        </select>
+        <button type="button" onclick="submitRating()">Submit Rating</button>
+      </form>
+
+
+      <div class="shop-actions">
+        <img src="" id="shop-logo" alt="placeholder" width="50px" height="50px">
+        <p id="shop-name"></p>
+        <button onclick="chatShop()">Chat</button>
+        <button onclick="viewShop()">View</button>
+      </div>
+    </div>
+
+
+    <script>
+
+      document.addEventListener("DOMContentLoaded", () => {window.onDataReady = () => {
+
+        function getProductById(store, productId) {
+        return store.Products.find(p => p.id === productId);
+        }
+
+        // Example usage:
+        let demoStore = stores[0]; // first store
+        let productData = getProductById(demoStore, 0); // product with id 0
+        console.log(productData.name, productData.price);
+
+        if (productData) {
+        // Recreate as Product instance
+        let product = new Product(productData.name, productData.image, productData.price);
+        product.id = productData.id;
+        product.ratings = productData.ratings || [];
+        product.avgRating = productData.avgRating || 0;
+
+        // Replace the plain object in the store with the revived Product instance
+        let index = demoStore.Products.findIndex(p => p.id === productData.id);
+        demoStore.Products[index] = product;
+
+        // Replace Product Name
+        document.querySelector("#product-detail h2").textContent = product.name;
+
+        // Replace Product Image
+        document.getElementById("product-img").src = product.image;
+
+        // Replace Product Price
+        document.getElementById("product-price").textContent = "RM" + product.price.toFixed(2);
+
+        // Replace Rating
+        showStars(product.avgRating);
+
+        // Replace store details
+        document.getElementById("shop-name").textContent = demoStore.name + " | ";
+        document.getElementById("shop-logo").src = demoStore.image;
+
+
+      }
+      }});
+
+
+    // user submits a rating
+    function submitRating() {
+    const rating = parseInt(document.getElementById("user-rating").value);
+    let demoStore = stores[0];
+    let product = demoStore.Products.find(p => p.id === 0);
+
+    if (product) {
+      product.rate(rating);
+      saveStores(stores);
+      showStars(product.avgRating);
+      alert("Thanks for rating " + product.name + "!");
+    }
+  }
+
+
+    //display product rating as stars
+    function showStars(rating) {
+    const maxStars = 5;
+    let stars = "";
+    for (let i = 1; i <= maxStars; i++) 
+    {
+    stars += i <= rating ? "★" : "☆";
+    }
+    document.getElementById("rating").innerHTML = 
+    stars + "<span class='rating-number'>" + rating + "/" + maxStars + "</span>";
+    }
+
+    function addToCart() {
+      // Get product details from the page
+      const name = document.querySelector("#product-detail h2").textContent;
+      const priceText = document.getElementById("product-price").textContent;
+      const price = parseFloat(priceText.replace("RM", ""));
+      const image = document.getElementById("product-img").src;
+      const quantity = parseInt(document.getElementById("quantity").value);
+
+      // Create a cart item object
+      const cartItem = {
+        name: name,
+        price: price,
+        image: image,
+        quantity: quantity
+      };
+
+      // Retrieve existing cart from localStorage
+      let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+      // Append new item
+      cart.push(cartItem);
+
+      // Save back to localStorage
+      localStorage.setItem("cart", JSON.stringify(cart));
+
+      alert(name + " added to cart!");
+
+    }
+    </script>
+  </body>
+</html>
