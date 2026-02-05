@@ -41,20 +41,23 @@
 
     #total-price {
         display: flex;
+        justify-content: center;
+        align-items: center;
         background-color: white;
-        border: 1px solid black;
+        border: 2px solid black;
         padding: 5px 20px;
-        position: absolute; /*always show totalprice and checkout on screen*/
+        position: sticky; /*always show totalprice and checkout on screen*/
         bottom: 0;
     }
     #total-price p, #total-price a{
-        font-size: 0.8em;
-        margin-left: 20px;
+        font-size: 1.2em;
+        font-weight: bold;
     }
     a#checkout-btn {
         background-color: var(--sec-color);
         border-radius: 20px;
         padding: 10px;
+        font-weight:400;
         border: 1px solid var(--sec-color);
       }
     a#checkout-btn:hover {
@@ -67,6 +70,9 @@
         padding: 5px;
         font-size: 1em;
         height: 10%;
+        margin-top: 10px;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
     }
     .cart-container {
         background-color: var(--fg-color);
@@ -105,6 +111,14 @@
         color: orange;
         font-weight: 500;
     }
+
+    .empty-cart p {
+        padding: 250px 0;
+        text-align: center;
+        font-size: 1.2em;
+        font-weight: bold;
+        color: grey;
+    }
     </style>
   </head>
 
@@ -120,12 +134,6 @@
     </header>
 
     <div id='main-content'>
-      <div id="select-all-from-cart" style="display: none;">
-        <label> 
-            <input type="checkbox" id="select-all"> Select All 
-        </label>
-      </div>
-
       <div id="cart-items">
       </div>
 
@@ -146,13 +154,9 @@
     let total = 0;
     let itemCount = 0;
     
-    const checkboxes = document.querySelectorAll(".item-checkbox");
-
-    checkboxes.forEach((checkbox, index) => { 
-        if (checkbox.checked) { 
-            total += cart[index].price * cart[index].quantity; 
-            itemCount += cart[index].quantity; 
-        } 
+    cart.forEach(item => {
+        total += item.price * item.quantity; 
+        itemCount += item.quantity; 
     });
 
     return `<p>
@@ -193,6 +197,16 @@
         let cart = JSON.parse(localStorage.getItem("cart")) || [];
         cartItemsDiv.innerHTML = ""; // clear previous content
 
+        if (cart.length === 0) { // Show empty cart message 
+            cartItemsDiv.innerHTML = ` 
+            <div class="empty-cart"> 
+                <p>Your cart is empty. Start shopping to add items!</p> 
+                </div> `; 
+            // Hide the total price div completely 
+            totalDiv.style.display = "none"
+            return; // stop here
+        }
+
         // Group items by store
         const stores = {};
         cart.forEach(item => {
@@ -222,7 +236,6 @@
                 const itemDiv = document.createElement("div");
                 itemDiv.classList.add("cart-container");
                 itemDiv.innerHTML = `
-                    <input type="checkbox" class="item-checkbox">
                     <img src="${item.image}" class="product-img" alt="${item.name}" width="80">
                     <div class="cart-details">
                         <h3>${item.name}</h3>
@@ -262,32 +275,6 @@
 
         // After rendering all items
         totalDiv.innerHTML = calculateTotal();
-
-        // Add checkbox functionality
-            const selectAllDivCheckbox = document.getElementById("select-all"); 
-            selectAllDivCheckbox.addEventListener("change", () => {
-                const itemCheckboxes = document.querySelectorAll(".item-checkbox"); 
-                itemCheckboxes.forEach(cb => cb.checked = selectAllDivCheckbox.checked); 
-                totalDiv.innerHTML = calculateTotal(); 
-            });
-
-        // Also update total when any individual checkbox changes 
-            document.querySelectorAll(".item-checkbox").forEach(cb => { 
-                cb.addEventListener("change", () => { 
-                    totalDiv.innerHTML = calculateTotal(); 
-                }); 
-            });
-
-        // hide select all unless >1 unique items
-        if (cart.length <= 1) 
-        { 
-            selectAllDiv.style.display = "none";
-        } 
-        else 
-        { 
-            selectAllDiv.style.display = "revert";
-        }
-        
     }
 }
 
