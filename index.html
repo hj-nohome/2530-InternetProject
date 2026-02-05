@@ -100,6 +100,14 @@
     </div>
   </body>
   <script>
+    //for ratings display
+    function formatRating(rating) {
+      if (Number.isInteger(rating)) {
+         return rating; 
+        }
+        return parseFloat(rating.toFixed(2)); // keeps up to 2 decimals, drops trailing zeros 
+      }
+
     const mainDiv = document.getElementById('main-content');
     const recentlyAddedBar = document.getElementById('recentlyAdded-bar');
       document.addEventListener("DOMContentLoaded",()=>{window.onDataReady = () => {
@@ -123,7 +131,7 @@
 
           img.src = prod.image;
           name.textContent = prod.name;
-          rating.textContent = prod.avgRating.toFixed(2) + '★';
+          rating.textContent = formatRating(prod.avgRating) + '★'; //use helper function to format rating
           price.textContent = "RM " + prod.price;
           pdiv.onclick = ()=>{
             goto(prod.id);
@@ -159,7 +167,7 @@
 
             img.src = prod.image;
             name.textContent = prod.name;
-            rating.textContent = prod.avgRating.toFixed(2) + '*';
+            rating.textContent = formatRating(prod.avgRating) + '★'; //use helper function to format rating
             price.textContent = "RM " + prod.price;
             pdiv.onclick = ()=>{
               goto(prod.id);
