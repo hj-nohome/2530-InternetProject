@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="styles.css">
+    <script src='session.js'></script>
+    <script src="data.js"></script>
+    <title>Impian - Shopping Cart</title>
+    <style>
+    #main-content{
+        overflow-y: scroll;
+        width: 80%;
+        grid-row: 2;
+        padding: 2px 0 0 40px;
+        position: relative; /*anchor for absolute children*/
+    }
+
+    .minus-btn, .plus-btn{
+        background-color: white;
+        min-width: 20px;
+        padding: 10px;
+    }
+    .minus-btn:hover, .plus-btn:hover {
+        background-color: lightgray;
+    }
+    .quantity {
+        background-color: white;
+        border: 2px solid black;
+        padding: 10px 20px;
+    }
+
+    div#select-all-from-cart {
+        background-color: var(--fg-color);
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+    }
+    input[type="checkbox"] {
+        margin-right:20px;
+    }
+
+    #total-price {
+        display: flex;
+        background-color: white;
+        border: 1px solid black;
+        padding: 5px 20px;
+        position: absolute; /*always show totalprice and checkout on screen*/
+        bottom: 0;
+    }
+    #total-price p, #total-price a{
+        font-size: 0.8em;
+        margin-left: 20px;
+    }
+    a#checkout-btn {
+        background-color: var(--sec-color);
+        border-radius: 20px;
+        padding: 10px;
+        border: 1px solid var(--sec-color);
+      }
+    a#checkout-btn:hover {
+        font-weight: 600;
+    }
+
+
+    .shop-container {
+        background-color: var(--fg-color);
+        padding: 5px;
+        font-size: 1em;
+        height: 10%;
+    }
+    .cart-container {
+        background-color: var(--fg-color);
+        box-sizing: border-box;
+        border: 5px solid darkgrey;
+        padding: 20px;
+        display: flex; /*align items horizontally*/
+        align-items: center;
+        position: relative; /* needed for absolute positioning of delete */
+    }
+    .cart-details {
+        display: flex;
+    }
+    .cart-details p, 
+    .cart-details h3, 
+    .cart-details div {
+        margin-left: 20px;
+    }
+
+    img.product-img {
+        border-radius: 10px;
+        border: 1px solid white;
+        background-color: white;
+    }
+
+    .delete-btn {
+        color: orangered;
+        border: none;
+        background-color: var(--fg-color);
+        position: absolute;
+        bottom: 0; /*Offset from the bottom edge */
+        right: 10px;
+        font-size: 0.9em;
+    }
+    .delete-btn:hover {
+        color: orange;
+        font-weight: 500;
+    }
+    </style>
+  </head>
+
+
+  <body>
+
+    <header id='topbar'>
+      <a href="index.html"><img src="./media/logo.webp" id='topbar-logo'></a>
+      <div id='topbar-nav'>
+        <a href="cart.html"><img src="./media/cart.png"></a>
+        <a href="panel.html"><img src="./media/user.png"></a>
+      </div>
+    </header>
+
+    <div id='main-content'>
+      <div id="select-all-from-cart" style="display: none;">
+        <label> 
+            <input type="checkbox" id="select-all"> Select All 
+        </label>
+      </div>
+
+      <div id="cart-items">
+      </div>
+
+      <div id="total-price">
+      </div>
+    </div>
+
+  <script>
+    //selecting html divs
+    const mainDiv = document.getElementById('main-content');
+    const cartItemsDiv = document.getElementById('cart-items');
+    const selectAllDiv = document.getElementById("select-all-from-cart");
+    const totalDiv = document.getElementById("total-price");
+
+    //count all price and items
+    function calculateTotal() {
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    let total = 0;
+    let itemCount = 0;
+    
+    const checkboxes = document.querySelectorAll(".item-checkbox");
+
+    checkboxes.forEach((checkbox, index) => { 
+        if (checkbox.checked) { 
+            total += cart[index].price * cart[index].quantity; 
+            itemCount += cart[index].quantity; 
+        } 
+    });
+
+    return `<p>
+        Total (${itemCount} items): RM ${total.toFixed(2)}
+        <a id=checkout-btn href=./checkout.html>
+            Check Out
+        </a>
+        </p>`;
+}
+
+    // update specific item quantity
+    function updateQuantity(index, newQuantity) {
+        let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+        if (newQuantity <= 0) {
+            // remove item if quantity goes to 0
+            cart.splice(index, 1);
+        } else {
+            cart[index].quantity = newQuantity;
+        }
+
+        localStorage.setItem("cart", JSON.stringify(cart));
+        displayCart(); // refresh cart
+    }
+
+
+    //delete individual items
+    function deleteCartItem(index) {
+        let cart = JSON.parse(localStorage.getItem("cart")) || [];
+        cart.splice(index, 1); // remove item at given index
+        localStorage.setItem("cart", JSON.stringify(cart));
+
+        displayCart(); // refresh cart display
+    }
+
+    //display all cart items
+    function displayCart() {
+        let cart = JSON.parse(localStorage.getItem("cart")) || [];
+        cartItemsDiv.innerHTML = ""; // clear previous content
+
+        // Group items by store
+        const stores = {};
+        cart.forEach(item => {
+            if (!stores[item.shopName]) {
+                stores[item.shopName] = {
+                    logo: item.shopLogo,
+                    items: []
+                };
+            }
+            stores[item.shopName].items.push(item);
+        });
+
+
+        // Render each store section
+        for (const [storeName, storeData] of Object.entries(stores)) {
+            // Store header
+            const storeDiv = document.createElement("div");
+            storeDiv.classList.add("shop-container");
+            storeDiv.innerHTML = `
+                <p>${storeName}</p>
+            `;
+            cartItemsDiv.appendChild(storeDiv);
+
+            // Items under this store
+            storeData.items.forEach((item) => {
+                const cartIndex = cart.indexOf(item); //get index of item
+                const itemDiv = document.createElement("div");
+                itemDiv.classList.add("cart-container");
+                itemDiv.innerHTML = `
+                    <input type="checkbox" class="item-checkbox">
+                    <img src="${item.image}" class="product-img" alt="${item.name}" width="80">
+                    <div class="cart-details">
+                        <h3>${item.name}</h3>
+                        <div class="quantity-controls">
+                            <button class="minus-btn">-</button>
+                            <span class="quantity">${item.quantity}</span>
+                            <button class="plus-btn">+</button>
+                        </div>
+
+                        <p style="font-weight:700; position: absolute; right: 50px;">
+                            RM ${item.price.toFixed(2)}
+                            </p>
+                    </div>
+                    <button class="delete-btn">Delete</button>
+                `;
+
+            // Delete button functionality
+            const deleteBtn = itemDiv.querySelector(".delete-btn");
+            deleteBtn.addEventListener("click", () => {
+                deleteCartItem(cartIndex); // find actual index in cart
+            });
+
+            // Add/minus button functionality
+            const minusBtn = itemDiv.querySelector(".minus-btn");
+            const plusBtn = itemDiv.querySelector(".plus-btn");
+
+            minusBtn.addEventListener("click", () => {
+                updateQuantity(cartIndex, item.quantity - 1);
+            });
+
+            plusBtn.addEventListener("click", () => {
+                updateQuantity(cartIndex, item.quantity + 1);
+            });
+
+            cartItemsDiv.appendChild(itemDiv);
+        });
+
+        // After rendering all items
+        totalDiv.innerHTML = calculateTotal();
+
+        // Add checkbox functionality
+            const selectAllDivCheckbox = document.getElementById("select-all"); 
+            selectAllDivCheckbox.addEventListener("change", () => {
+                const itemCheckboxes = document.querySelectorAll(".item-checkbox"); 
+                itemCheckboxes.forEach(cb => cb.checked = selectAllDivCheckbox.checked); 
+                totalDiv.innerHTML = calculateTotal(); 
+            });
+
+        // Also update total when any individual checkbox changes 
+            document.querySelectorAll(".item-checkbox").forEach(cb => { 
+                cb.addEventListener("change", () => { 
+                    totalDiv.innerHTML = calculateTotal(); 
+                }); 
+            });
+
+        // hide select all unless >1 unique items
+        if (cart.length <= 1) 
+        { 
+            selectAllDiv.style.display = "none";
+        } 
+        else 
+        { 
+            selectAllDiv.style.display = "revert";
+        }
+        
+    }
+}
+
+    document.addEventListener("DOMContentLoaded",()=>{
+        window.onDataReady = () => {
+        displayCart();
+    }});
+  </script>
+  </body>
+</html>
