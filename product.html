@@ -17,8 +17,9 @@
         border-radius: 5px;
       }
 
-      img {
-        border: 2px solid black;
+      img#shop-logo, img#product-img {
+        border: 1px solid white;
+        background-color: white;
         border-radius: 10px;
       }
 
@@ -27,6 +28,9 @@
         border-radius: 20px;
         padding: 10px;
         border: 1px solid var(--sec-color);
+      }
+      button:hover {
+        font-weight: 600;
       }
 
       div #rating {
@@ -97,8 +101,8 @@
           <input type="number" id="quantity" name="quantity" value="1" min="1">
         </div>
         <div style="grid-column: 2;">
-          <button onclick="buyProduct()">Buy Now</button>
-          <button onclick="addToCart()">Add To Cart</button>
+          <button type="button" onclick="buyProduct()">Buy Now</button>
+          <button type="button" onclick="addToCart()">Add To Cart</button>
         </div>
 
         <label for="user-rating" style="margin-top: 20px;">Rate this product:</label>
@@ -123,44 +127,53 @@
 
 
     <script>
+      //get the id of clicked product
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get("id");
+      const productId = parseInt(id); // convert string to number
 
-      document.addEventListener("DOMContentLoaded", () => {window.onDataReady = () => {
+      document.addEventListener("DOMContentLoaded", () => {
+        window.onDataReady = () => {
 
-        function getProductById(store, productId) {
-        return store.Products.find(p => p.id === productId);
-        }
+          function getProductById(store, productId) { return store.Products.find(p => p.id === productId)};
 
-        // Example usage:
-        let demoStore = stores[0]; // first store
-        let productData = getProductById(demoStore, 0); // product with id 0
-        console.log(productData.name, productData.price);
+          // find the store that *contains* this product
+          let demoStore = stores.find(store => store.Products.some(p => p.id === productId)); //the .some() method returns true as soon as an element matches
+          if (!demoStore) //product not found 
+          {
+            alert("The product does not exist");
+            return;
+          }
 
-        if (productData) {
-        // Recreate as Product instance
-        let product = new Product(productData.name, productData.image, productData.price);
-        product.id = productData.id;
-        product.ratings = productData.ratings || [];
-        product.avgRating = productData.avgRating || 0;
+          // Get the product 
+          let productData = getProductById(demoStore, productId);
 
-        // Replace the plain object in the store with the revived Product instance
-        let index = demoStore.Products.findIndex(p => p.id === productData.id);
-        demoStore.Products[index] = product;
+          if (productData) {
+            // Recreate as Product instance
+            let product = new Product(productData.name, productData.image, productData.price);
+            product.id = productData.id;
+            product.ratings = productData.ratings || [];
+            product.avgRating = productData.avgRating || 0;
 
-        // Replace Product Name
-        document.querySelector("#product-detail h2").textContent = product.name;
+            // Replace the plain object in the store with the revived Product instance
+            let index = demoStore.Products.findIndex(p => p.id === productData.id);
+            demoStore.Products[index] = product;
 
-        // Replace Product Image
-        document.getElementById("product-img").src = product.image;
+            // Replace Product Name
+            document.querySelector("#product-detail h2").textContent = product.name;
 
-        // Replace Product Price
-        document.getElementById("product-price").textContent = "RM" + product.price.toFixed(2);
+            // Replace Product Image
+            document.getElementById("product-img").src = product.image;
 
-        // Replace Rating
-        showStars(product.avgRating);
+            // Replace Product Price
+            document.getElementById("product-price").textContent = "RM" + product.price.toFixed(2);
 
-        // Replace store details
-        document.getElementById("shop-name").textContent = demoStore.name + " | ";
-        document.getElementById("shop-logo").src = demoStore.image;
+            // Replace Rating
+            showStars(product.avgRating);
+
+            // Replace store details
+            document.getElementById("shop-name").textContent = demoStore.name + " | ";
+            document.getElementById("shop-logo").src = demoStore.image;
 
 
       }
@@ -170,8 +183,8 @@
     // user submits a rating
     function submitRating() {
     const rating = parseInt(document.getElementById("user-rating").value);
-    let demoStore = stores[0];
-    let product = demoStore.Products.find(p => p.id === 0);
+    let demoStore = stores.find(store => store.Products.some(p => p.id === productId));
+    let product = demoStore.Products.find(p => p.id === productId);
 
     if (product) {
       product.rate(rating);
@@ -190,36 +203,62 @@
     {
     stars += i <= rating ? "★" : "☆";
     }
+
+    // Formatting the ratings:
+    let displayRating;
+    if (Number.isInteger(rating)) { //if the rating is an integer
+      displayRating = rating; // show as whole number
+    } else if (Math.abs(rating - Math.round(rating)) < 0.01) { //near integer rating (e.g. 3.999 -> 4)
+      displayRating = Math.round(rating); // show as whole number 
+    } else { 
+      // two decimal place, but drop trailing zero (e.g. 3.50 → 3.5)
+      displayRating = parseFloat(rating.toFixed(2)).toString(); // show 2 decimals only if needed 
+    }
+    
     document.getElementById("rating").innerHTML = 
-    stars + "<span class='rating-number'>" + rating.toFixed(2) + "/" + maxStars + "</span>";
+    stars + "<span class='rating-number'>" + displayRating + "/" + maxStars + "</span>";
     }
 
     function addToCart() {
-      // Get product details from the page
-      const name = document.querySelector("#product-detail h2").textContent;
-      const priceText = document.getElementById("product-price").textContent;
-      const price = parseFloat(priceText.replace("RM", ""));
-      const image = document.getElementById("product-img").src;
+      let demoStore = stores.find(store => store.Products.some(p => p.id === productId)); 
+      let product = demoStore.Products.find(p => p.id === productId); 
+      if (!product) {
+         alert("Product not found"); 
+         return; 
+        } 
+      
+      //product quantity
       const quantity = parseInt(document.getElementById("quantity").value);
 
       // Create a cart item object
       const cartItem = {
-        name: name,
-        price: price,
-        image: image,
+        id: productId,
+        shopName: demoStore.name, 
+        name: product.name, 
+        price: product.price, 
+        image: product.image, 
         quantity: quantity
       };
 
       // Retrieve existing cart from localStorage
       let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-      // Append new item
-      cart.push(cartItem);
+      // Check if item already exists
+      const existingItemIndex = cart.findIndex(item => item.id === cartItem.id);
+
+      if (existingItemIndex !== -1) {
+        // Item exists → update quantity
+        cart[existingItemIndex].quantity += cartItem.quantity;
+      } else {
+        // Item does not exist → add new
+        cart.push(cartItem);
+      }
+
 
       // Save back to localStorage
       localStorage.setItem("cart", JSON.stringify(cart));
 
-      alert(name + " added to cart!");
+      alert(product.name + " added to cart!");
 
     }
     </script>
