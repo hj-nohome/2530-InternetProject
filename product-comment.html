@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="styles.css">
+    <script src='session.js'></script>
+    <script src="data.js"></script>
+    <title>Impian - Product Comment</title>
+    <style>
+        #main-content {
+            overflow-y: scroll;
+        }
+
+        #product-container {
+            margin: auto;
+            padding: 20px;
+            height: 30%;
+            width: 80%;
+            display: grid;
+            grid-template-columns: 200px 1fr; /*column 1 reserved for img*/
+            grid-gap: 20px;
+            background-color: var(--fg-color);
+        }
+        .product-info {
+            grid-column: 2;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+        .product-rating {
+            grid-column: 3;
+        }
+
+        img#product-img {
+            grid-column: 1;
+            border: 1px solid white;
+            background-color: white;
+            border-radius: 10px;
+        }
+
+        #comments-list {
+            margin: auto;
+            padding: 20px;
+            width: 80%;
+            background-color: darkgray;
+        }
+        #comment {
+            overflow-y: auto;
+            height: 150px;
+            padding: 10px;
+            border-radius: 20px;
+            border: none;
+            word-wrap: break-word; /*so long words don't overflow*/
+        }
+        .comment-entry { 
+            padding: 10px; 
+            background: #f9f9f9; 
+            border-radius: 5px; 
+        }
+
+        form{
+            width: 80%;
+            height: 50%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--fg-color);
+            display: grid;
+            grid-template-columns: 1fr;
+            border-radius: 5px;
+        }
+
+        .rating { 
+            display: flex; 
+            flex-direction: row; 
+        } 
+        .star {
+            font-size: 1.2em; 
+            color: white; 
+            cursor: pointer; 
+            transition: color 0.2s; 
+        }
+        .star.selected {
+            color: gold; 
+        }
+    </style>
+  </head>
+
+
+  <body>
+    <aside id='sidebar'>
+      <a href="index.html">Home</a>
+      <a href="panel.html">Profile</a>
+      <a href="cart.html">Cart</a>
+      <a href="about.html">About&nbsp;Us</a>
+      <a href="contact.html">Contact&nbsp;Us</a>
+    </aside>
+
+    <header id='topbar'>
+      <a href="index.html"><img src="./media/logo.webp" id='topbar-logo'></a>
+      <div id='topbar-nav'>
+        <a href="cart.html"><img src="./media/cart.png"></a>
+        <a href="panel.html"><img src="./media/user.png"></a>
+      </div>
+    </header>
+
+    <div id='main-content'>
+      <div id="product-container">
+        <img src="" id="product-img" alt="placeholder" width="200px" height="200px">
+        <div class="product-info">
+            <h2>Product Name</h2>
+            <p id="product-price">RM 0.00</p>
+        </div>
+        <div class="product-rating">
+            <p>0/0 <span style="color:gold; font-size: 2em;">★</span></p>
+        </div>
+
+      </div>
+
+      <form id="comment-rating">
+        <label for="comment" style="font-size: 0.8em;">Rate this product</label>
+        <textarea id="comment" placeholder="type here..."></textarea>
+        <div class="rating"> 
+            <span class="star" data-value="1">★</span>
+            <span class="star" data-value="2">★</span> 
+            <span class="star" data-value="3">★</span> 
+            <span class="star" data-value="4">★</span> 
+            <span class="star" data-value="5">★</span> 
+        </div> 
+        
+        <!-- Hidden input to store rating for form submission --> 
+         <input type="hidden" name="rating" id="rating-value">
+         <button type="submit">Submit</button>
+      </form>
+
+      <div id="comments-list"></div>
+    </div>
+  
+  <script>
+    //get the id of clicked product
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
+    const productId = parseInt(id); // convert string to number
+
+    // avg rating formatting
+    function formatRating(rating) {
+        if (Number.isInteger(rating)) { //if the rating is an integer
+            return rating; // show as whole number
+        } else if (Math.abs(rating - Math.round(rating)) < 0.01) { //near integer rating (e.g. 3.999 -> 4)
+            return Math.round(rating); // show as whole number 
+        } else { 
+            // two decimal place, but drop trailing zero (e.g. 3.50 → 3.5)
+            return parseFloat(rating.toFixed(2)).toString();
+        }
+    }
+
+    //display all comments
+    function displayComments() {
+        const commentsList = document.getElementById("comments-list");
+        let comments = JSON.parse(localStorage.getItem(`comments-${productId}`)) || [];
+
+        commentsList.innerHTML = `<h2>Comments (${comments.length})</h2>`;
+        comments.forEach(entry => {
+        const div = document.createElement("div");
+        div.classList.add("comment-entry");
+        div.innerHTML = `
+            <p><strong>Rating:</strong> ${"★".repeat(entry.rating)} (${entry.rating}/5)</p>
+            <p><strong>Comment:</strong> ${entry.comment}</p>
+            <hr>
+        `;
+        commentsList.appendChild(div);
+        });
+    }
+
+    // show product details
+    function showProductDetails() {
+        let demoStore = stores.find(store => store.Products.some(p => p.id === productId));
+        let productData = demoStore?.Products.find(p => p.id === productId);
+        if (!productData) return;
+
+        document.querySelector("#product-container h2").textContent = productData.name;
+        document.getElementById("product-img").src = productData.image;
+        document.getElementById("product-price").textContent = "RM" + productData.price.toFixed(2)
+
+        // Show average rating
+        const ratingDiv = document.querySelector(".product-rating");
+        const avg = productData.avgRating || 0;
+        ratingDiv.innerHTML = `
+        <p>${formatRating(avg)} <span style="color:gold; font-size: 2em;">★</span>
+            </p>`;
+    }
+
+    function handleSubmit(e) {
+        e.preventDefault(); //prevent page reload when submitting
+
+        const rating = parseInt(document.getElementById("rating-value").value);
+        const comment = document.getElementById("comment").value;
+
+        //if no rating or comment values
+        if (!rating || !comment.trim()) {
+            alert("Please select a rating and enter a comment.");
+            return;
+        }
+
+        //Displaying current product
+        // find the store that contains this product
+        let demoStore = stores.find(store => store.Products.some(p => p.id === productId));
+
+        // get the actual product
+        let productData = demoStore.Products.find(p => p.id === productId);
+
+        if (productData) {
+                // Recreate as Product instance (to access methods)
+                let product = new Product(productData.name, productData.image, productData.price);
+                product.id = productData.id;
+                product.ratings = productData.ratings || [];
+                product.avgRating = productData.avgRating || 0;
+
+                // Replace the plain object in the store with the revived Product instance
+                let index = demoStore.Products.findIndex(p => p.id === productData.id);
+                demoStore.Products[index] = product;
+
+                product.rate(rating);
+                saveStores(stores);
+                showProductDetails(); // refresh rating display
+                alert("Thanks for rating " + product.name + "!");
+        }
+
+        // Save comment
+        let comments = JSON.parse(localStorage.getItem(`comments-${productId}`)) || [];
+        comments.push({ rating, comment });
+        localStorage.setItem(`comments-${productId}`, JSON.stringify(comments));
+
+        displayComments();
+    }
+        
+    document.addEventListener("DOMContentLoaded",()=>{
+        window.onDataReady = () => {
+            showProductDetails();
+            displayComments();
+
+            //when submit button is clicked
+            document.getElementById("comment-rating").addEventListener("submit", handleSubmit);
+
+            //add rating functionality
+            const stars = document.querySelectorAll('.star');
+            const ratingValue = document.getElementById('rating-value');
+
+            stars.forEach((star, index) => {
+                star.addEventListener('click', () => {
+                    ratingValue.value = index + 1;
+                    stars.forEach(s => s.classList.remove('selected'));
+                    for (let i = 0; i <= index; i++) stars[i].classList.add('selected');
+                });
+
+                star.addEventListener('mouseover', () => {
+                    stars.forEach(s => s.classList.remove('selected'));
+                    for (let i = 0; i <= index; i++) stars[i].classList.add('selected');
+                });
+
+                star.addEventListener('mouseout', () => {
+                        stars.forEach(s => s.classList.remove('selected'));
+                        for (let i = 0; i < ratingValue.value; i++) stars[i].classList.add('selected');
+                    });
+                });
+            }});
+  </script>
+  </body>
+</html>
