@@ -33,6 +33,15 @@
         font-weight: 600;
       }
 
+      #comments-btn {
+        margin: auto;
+        padding: 20px 0;
+        width: 60%;
+      }
+      #comments-btn button {
+        width:100%;
+      }
+
       div #rating {
         color:var(--sec-color);
         font-size:2em;
@@ -104,16 +113,6 @@
           <button type="button" onclick="buyProduct()">Buy Now</button>
           <button type="button" onclick="addToCart()">Add To Cart</button>
         </div>
-
-        <label for="user-rating" style="margin-top: 20px;">Rate this product:</label>
-        <select id="user-rating" style="margin-top: 20px;">
-          <option value="1">1 ★</option>
-          <option value="2">2 ★★</option>
-          <option value="3">3 ★★★</option>
-          <option value="4">4 ★★★★</option>
-          <option value="5">5 ★★★★★</option>
-        </select>
-        <button type="button" onclick="submitRating()">Submit Rating</button>
       </form>
 
 
@@ -122,6 +121,10 @@
         <p id="shop-name"></p>
         <button onclick="chatShop()">Chat</button>
         <button onclick="viewShop()">View</button>
+      </div>
+
+      <div id="comments-btn">
+          <button type="button" onclick="gotoComment()">Comments</button>
       </div>
     </div>
 
@@ -179,22 +182,6 @@
       }
       }});
 
-
-    // user submits a rating
-    function submitRating() {
-    const rating = parseInt(document.getElementById("user-rating").value);
-    let demoStore = stores.find(store => store.Products.some(p => p.id === productId));
-    let product = demoStore.Products.find(p => p.id === productId);
-
-    if (product) {
-      product.rate(rating);
-      saveStores(stores);
-      showStars(product.avgRating);
-      alert("Thanks for rating " + product.name + "!");
-    }
-  }
-
-
     //display product rating as stars
     function showStars(rating) {
     const maxStars = 5;
@@ -212,9 +199,10 @@
       displayRating = Math.round(rating); // show as whole number 
     } else { 
       // two decimal place, but drop trailing zero (e.g. 3.50 → 3.5)
-      displayRating = parseFloat(rating.toFixed(2)).toString(); // show 2 decimals only if needed 
+      displayRating = parseFloat(rating.toFixed(2)).toString(); 
     }
     
+    //display rating
     document.getElementById("rating").innerHTML = 
     stars + "<span class='rating-number'>" + displayRating + "/" + maxStars + "</span>";
     }
@@ -260,6 +248,10 @@
 
       alert(product.name + " added to cart!");
 
+    }
+
+    function gotoComment(){
+      window.location.href='./product-comment.html?id='+productId;
     }
     </script>
   </body>
