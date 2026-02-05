@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="styles.css">
+    <script src='session.js'></script>
+    <script src="data.js"></script>
+    <title>Impian - Checkout</title>
+    <style>
+      /* reset styles.css */
+      #main-content{
+        padding: 52px 0 0 0;
+      }
+      body{
+        display: inline;
+        background-color: var(--bg-color);
+        height: 100vh;
+      }
+      /* reset styles.css */
+
+      #main-content{
+        display: grid;
+        grid-template-columns: 3fr 2fr;
+        gap: 10px;
+        padding: 70px 10px 10px 10px;
+        height: 100vh;
+      }
+      #shippingDetailsDiv{
+        background-color: var(--fg-color);
+        height: 100%;
+      }
+      #shippingDetailsDiv textarea{
+        width: 90%;
+        resize: none;
+      }
+      #shippingDetailsDiv img{
+        height: 100%;
+      }
+      #orderDetailsDiv{
+        background-color: var(--bg-color);
+        height: 100%;
+        text-align: center;
+      }
+      #fg-div{
+        background-color: var(--fg-color);
+        margin-bottom: 10px;
+        padding: 10px 0 10px 0;
+        padding-inline: 10px;
+      }
+      .paymentMethodsDiv{
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 10px;
+        height: 100px;
+      }
+      .radioContainer{
+        border: 1px solid black;
+        display: grid;
+        grid-template-rows: auto auto;
+        place-items: center;
+      }
+      #checkoutBtn{
+        width: 100%;
+        background-color: var(--sec-color);
+        border: none;
+        border-radius: 10px;
+        font-size: 50px;
+      }
+      #priceLabel{
+        text-align: left;
+      }
+      #cartDivHead{
+        background-color: var(--tg-color);
+      }
+      #cartDiv{
+        background-color: var(--fg-color);
+      }
+    .cartItemDiv{
+      display: grid;
+      grid-template-columns: auto auto;
+      grid-template-areas:
+        "A B"
+        "A C"
+        "D D";
+      margin: 0 0 10px 0;
+      text-align: left;
+    }
+    .cartItemImg{
+      grid-area: A;
+      width: 100px;
+    }
+    .cartItemName{
+      grid-area: B;
+      text-overflow: ellipsis;
+      width: 100%;
+      font-weight: bold;
+    }
+    .cartItemPrice{
+      grid-area: C;
+      width: 100%;
+    }
+    hr{
+      grid-area: D;
+      margin: auto;
+      margin-top: 10px;
+      width: 50%;
+      border: 5px solid var(--tg-color);
+      border-radius: 3px;
+    }
+    </style>
+  </head>
+
+
+  <body>
+    <header id='topbar'>
+      <a href="index.html"><img src="./media/logo.webp" id='topbar-logo'></a>
+      <div id='topbar-nav'>
+        <a href="cart.html"><img src="./media/cart.png"></a>
+        <a href="panel.html"><img src="./media/user.png"></a>
+      </div>
+    </header>
+
+    <form id='main-content'>
+      <div id='shippingDetailsDiv'>
+        <h2>Address:</h2>
+        <textarea rows="5" name='address'>
+Ali Bin Charli
+67, Jalan Sigmand, Bandar Taman 1
+50450 Kuala Lumpur
+Malaysia
+</textarea><br><br>
+        <h2>Payment Method:</h2>
+        <div class='paymentMethodsDiv'>
+          <div class='radioContainer'>
+            <img src="./media/paypal.png"><br>
+            <input type="radio" name="paymentMethod" value="paypal" checked>
+          </div>
+          <div class='radioContainer'>
+            <img src="./media/mastercard.png"><br>
+            <input type="radio" name="paymentMethod" value="mastercard">
+          </div>
+          <div class='radioContainer'>
+            <img src="./media/visa.png"><br>
+            <input type="radio" name="paymentMethod" value="visa">
+          </div>
+        </div>
+      </div>
+
+      <div id='orderDetailsDiv'>
+        <div id='fg-div'>
+          <input type='button' id='checkoutBtn' value='Checkout'>
+          <h2 id='priceLabel'>Total Price: RM XX.XX</h2>
+        </div>
+
+        <div id='cartDiv'>
+          <h2 id='cartDivHead'>Items in the Order (X)</h2>
+        </div>
+      </div>
+    </form>
+  </body>
+  <script>
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+    const cartDiv = document.getElementById('cartDiv');
+    const form = document.getElementById('main-content');
+
+    let totalPrice = 0;
+    document.addEventListener("DOMContentLoaded",()=>{window.onDataReady = () => {
+      cart.forEach((cartItem) => {
+        let ciDiv = document.createElement('div');
+        let img = document.createElement('img');
+        let name = document.createElement('p');
+        let price = document.createElement('p');
+        ciDiv.className='cartItemDiv';
+        img.className='cartItemImg';
+        name.className='cartItemName';
+        price.className='cartItemPrice';
+
+        img.src = cartItem.image;
+        name.textContent = cartItem.name;
+        price.textContent = 'RM '+cartItem.price.toFixed(2);
+
+        ciDiv.append(img);
+        ciDiv.append(name);
+        ciDiv.append(price);
+        ciDiv.append(document.createElement('hr'));
+
+        totalPrice+=cartItem.price;
+
+        cartDiv.append(ciDiv);
+      })
+      document.getElementById('priceLabel').textContent = 'Total Price: RM '+totalPrice;
+    }});
+    document.getElementById('checkoutBtn').addEventListener('click', ()=>{
+      form.action='confirm.html';
+      form.submit();
+    });
+  </script>
+</html>

@@ -1,13 +1,78 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="utf-8">
     <link rel="stylesheet" href="styles.css">
     <script src='session.js'></script>
     <script src="data.js"></script>
-
-    <title>PLACEHOLDER</title>
+    <title>iMPIAN.MY</title>
     <style>
-      
+      h2{font-size: 48px;}
+
+      .productContainer-bar{
+        display: flex;
+        width: 101%;
+        overflow-x: scroll;
+        height: 300px;
+        background:
+          linear-gradient(
+            to bottom,
+            transparent 0%,
+            transparent 10%,
+            var(--sec-color) 10%,
+            var(--sec-color) 90%,
+            transparent 90%,
+            transparent 100%
+          );
+        position: relative;
+        left: -20px;
+        top: 15px;
+        margin-bottom: 50px;
+      }
+      .productContainer{
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-areas:
+          "A A A A A"
+          "B B B B B"
+          "C C D D D";
+        width: 200px;
+        height: 300px;
+        background-color: var(--prim-color);
+        margin-left: 10px;
+        padding-inline: 5px;
+        flex-shrink: 0;
+      }
+      .productContainer *{
+        text-overflow: ellipsis;
+        cursor: pointer;
+      }
+      .productContainer-image{
+        grid-area: A;
+        width: 100%;
+        border-radius: 5px;
+        background-color: white;
+        margin-top: 5px;
+      }
+      .productContainer-name{
+        grid-area: B;
+        width: 100%;
+        font-weight: bold;
+      }
+      .productContainer-rating{
+        grid-area: C;
+        width: 100%;
+      }
+      .productContainer-price{
+        grid-area: D;
+        width: 100%;
+        font-weight: bold;
+        color: var(--sec-color);
+      }
+      #main-content{
+        overflow-y: scroll;
+        height: 100%;
+      }
     </style>
   </head>
 
@@ -30,43 +95,89 @@
     </header>
 
     <div id='main-content'>
-      <input type="text" placeholder='store name' id="nameInput">
-      <input type="button" onclick="add()" value="Add Store">
-      <input type="button" onclick="delet()" value="Delete Store">
-      <input type="button" onclick="save()" value="Save Data">
-      <p id='display'>display</p>
+      <h2>Recently Added</h2>
+      <div class="productContainer-bar" id="recentlyAdded-bar"></div>
     </div>
   </body>
   <script>
-    function refresh(){
-      let storec = 0, productc = 0;
-      for(let i = 0; i < stores.length; ++i){
-        storec++;
-        productc += stores[i].Products.length;
-      }
-      document.getElementById('display').innerHTML = 'StoreC: ' + storec + '<br>ProductC: ' + productc;
+    const mainDiv = document.getElementById('main-content');
+    const recentlyAddedBar = document.getElementById('recentlyAdded-bar');
+      document.addEventListener("DOMContentLoaded",()=>{window.onDataReady = () => {
+        const ra_prods = [];
+        stores.forEach((stor)=>{
+          if(stor.Products?.length)
+            ra_prods.push(...stor.Products);
+        });
+        ra_prods.forEach((prod)=>{
+          let pdiv = document.createElement('div');
+          let img = document.createElement('img');
+          let name = document.createElement('p');
+          let rating = document.createElement('p');
+          let price = document.createElement('p');
+
+          pdiv.className = 'productContainer';
+          img.className = 'productContainer-image';
+          name.className = 'productContainer-name';
+          rating.className = 'productContainer-rating';
+          price.className = 'productContainer-price';
+
+          img.src = prod.image;
+          name.textContent = prod.name;
+          rating.textContent = prod.avgRating.toFixed(2) + '★';
+          price.textContent = "RM " + prod.price;
+          pdiv.onclick = ()=>{
+            goto(prod.id);
+          };
+          
+          pdiv.append(img);
+          pdiv.append(name);
+          pdiv.append(rating);
+          pdiv.append(price);
+
+          recentlyAddedBar.append(pdiv);
+        });
+
+        //per store
+        stores.forEach((stor)=>{
+          let title = document.createElement('h2');
+          let sdiv = document.createElement('div');
+
+          title.textContent = stor.name;
+          sdiv.className = 'productContainer-bar';
+          stor.Products.forEach((prod)=>{
+            let pdiv = document.createElement('div');
+            let img = document.createElement('img');
+            let name = document.createElement('p');
+            let rating = document.createElement('p');
+            let price = document.createElement('p');
+
+            pdiv.className = 'productContainer';
+            img.className = 'productContainer-image';
+            name.className = 'productContainer-name';
+            rating.className = 'productContainer-rating';
+            price.className = 'productContainer-price';
+
+            img.src = prod.image;
+            name.textContent = prod.name;
+            rating.textContent = prod.avgRating.toFixed(2) + '*';
+            price.textContent = "RM " + prod.price;
+            pdiv.onclick = ()=>{
+              goto(prod.id);
+            };
+            
+            pdiv.append(img);
+            pdiv.append(name);
+            pdiv.append(rating);
+            pdiv.append(price);
+
+            sdiv.append(pdiv);
+          });
+          mainDiv.append(title);
+          mainDiv.append(sdiv);
+        });
+      }});
+    function goto(id){
+      window.location.href='./product.html?id='+id;
     }
-    function add(){
-      stores.push(new Store(document.getElementById('nameInput').value, 'igm'));
-      for(let i = 0; i < stores.length; ++i){
-        stores[i].Products.push(new Product('stuff','img',67));
-      }
-      refresh();
-    }
-    function delet(){
-      stores.pop();
-      for(let i = 0; i < stores.length; ++i){
-        stores[i].Products.pop();
-      }
-      refresh();
-    }
-    function save(){
-      saveStores(stores);
-    }
-    document.addEventListener("DOMContentLoaded", () => {
-      window.onDataReady = () => {
-        refresh();
-      }
-    });
   </script>
 </html>

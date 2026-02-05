@@ -36,7 +36,12 @@
   </body>
   <script>
     document.addEventListener("DOMContentLoaded",()=>{window.onDataReady = () => {
-      
+      const params = new URLSearchParams(window.location.search);
+      const address = params.get("address");
+      const method = params.get("paymentMethod");
+
+      console.log(address);
+      console.log(method);
     }});
   </script>
 </html>

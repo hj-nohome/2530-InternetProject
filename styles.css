@@ -4,6 +4,7 @@
   --prim-color: #E2A9F1;    /* ptimary purple, shouldnt change. */
   --sec-color: #FFDE59;     /* secondary yellow, used for buttons and clickable text, shouldnt change */
   --text-color: #000000;    /* used for default text, which should always be on top of foreground, never background directly */
+  --tg-color: #919191;      /* used in checkout(payment) and cart pages */
 }
 
 @font-face{
